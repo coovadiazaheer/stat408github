@@ -1,0 +1,48 @@
+---
+title: "finalattempt"
+format: html
+editor: visual
+---
+
+```{r}
+#Loading in data
+whitewine <- read.csv("Data/winequality-white.csv", sep=";")
+summary(whitewine)
+```
+
+```{r}
+#Building mod_max
+quality_pred_3 <- glm(quality ~ .*. + I(fixed.acidity^2) + I(volatile.acidity^2) + I(citric.acid^2) + I(residual.sugar^2) + I(chlorides^2) + I(free.sulfur.dioxide^2) + I(total.sulfur.dioxide^2) + I(density^2) + I(pH^2) + I(sulphates^2) + I(alcohol^2), whitewine, family = poisson)
+summary(quality_pred_3)
+```
+
+```{r}
+#Var sel
+mod_best <- step(quality_pred_3, direction="both")
+summary(mod_best)
+```
+
+```{r}
+#Model testing
+
+#Checking multicollinearity
+library(car)
+vif(mod_best)
+
+#Overall significance:
+chi2 <- summary(mod_best)$null - summary(mod_best)$deviance
+# dg of freedom is # of parameters (# of paramters in null hypothesis)
+p <- pchisq(chi2,df=15,lower.tail=FALSE)
+p
+# p = 1.870576e-38 < alpha --> so we reject null hyp of regression model with no explanatory variables so at least one explanatory variable is significant which is GOOD!
+
+#Residuals and QQ plot
+plot(mod_best,1)
+plot(mod_best,2)
+
+#Estimated r^2 analog
+poi_est_of_fit <- (summary(mod_best)$null - summary(mod_best)$deviance)/summary(mod_best)$null
+summary(mod_best)$null
+summary(mod_best)$deviance
+poi_est_of_fit # = 0.334923
+```
